@@ -12,3 +12,7 @@ torch>=2.2.0
 torchaudio>=2.2.0
 opencv-python>=4.8.1
 
+# testing dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
