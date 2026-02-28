@@ -9,8 +9,8 @@ scipy==1.11.4
 # machine learning / detection dependencies
 transformers>=4.35.0
 torch>=2.2.0
-torchaudio>=2.2.0
 opencv-python>=4.8.1
+Pillow>=10.0.0
 
 # testing dependencies
 pytest>=7.4.0

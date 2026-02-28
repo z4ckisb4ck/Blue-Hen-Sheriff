@@ -19,13 +19,11 @@ app.add_middleware(
 
 # detectors and scoring
 from reality_engine.backend.text_detector import TextDetector
-from reality_engine.backend.audio_detector import AudioDetector
-from reality_engine.backend.video_detector import VideoDetector
+from reality_engine.backend.image_detector import ImageDetector
 from reality_engine.backend.scoring_engine import ScoringEngine
 
 text_detector = TextDetector()
-audio_detector = AudioDetector()
-video_detector = VideoDetector()
+image_detector = ImageDetector()
 scoring_engine = ScoringEngine()
 
 
@@ -40,22 +38,14 @@ def analyze_text(payload: dict):
     return scoring_engine.calculate_score({"text": det})
 
 
-@app.post("/analyze/audio")
-def analyze_audio(payload: dict):
-    """Request body: {"audio_path": "path/to/file.wav"}.
+@app.post("/analyze/image")
+def analyze_image(payload: dict):
+    """Request body: {"image_path": "path/to/image.jpg"}.
 
     In a real deployment you'd accept file uploads instead of paths.
     """
-    det = audio_detector.analyze(payload.get("audio_path", ""))
-    return scoring_engine.calculate_score({"audio": det})
-
-
-@app.post("/analyze/video")
-def analyze_video(payload: dict):
-    """Request body: {"video_path": "path/to/file.mp4"}.
-    """
-    det = video_detector.analyze(payload.get("video_path", ""))
-    return scoring_engine.calculate_score({"video": det})
+    det = image_detector.analyze(payload.get("image_path", ""))
+    return scoring_engine.calculate_score({"image": det})
 
 
 if __name__ == "__main__":
