@@ -5,3 +5,10 @@ elevenlabs==0.2.27
 requests==2.31.0
 numpy==1.24.3
 scipy==1.11.4
+
+# machine learning / detection dependencies
+transformers>=4.35.0
+torch>=2.2.0
+torchaudio>=2.2.0
+opencv-python>=4.8.1
+
