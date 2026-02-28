@@ -1,35 +1,42 @@
 """Image detection module.
 
-Analyzes image content for AI-generation detection.
+Analyzes image content for AI-generation detection using Google Gemini API.
 """
 
+import os
 from typing import Any, Dict
 
-from transformers import pipeline
+import google.generativeai as genai
+from PIL import Image
 
 
 class ImageDetector:
-    """Detects AI-generated or manipulated images.
+    """Detects AI-generated or manipulated images using Gemini.
 
-    Uses a vision classifier to determine whether an image is real or
-    artificially generated. The default model is trained on real vs.
-    synthetic image datasets.
+    Uses the Google Gemini API to analyze images and determine if they
+    are AI-generated or authentic photographs.
     """
 
-    def __init__(self, model_name: str = "Falconsai/nsfw_image_detection"):
+    def __init__(self, api_key: str = None):
         """Initialize image detector.
 
         Parameters
         ----------
-        model_name:
-            Hugging Face model identifier for image classification.
-            Default is a general-purpose image classifier; for AI-generation
-            detection you might swap this for a specialized model.
+        api_key:
+            Google Gemini API key. If not provided, looks for
+            GOOGLE_API_KEY environment variable.
         """
-        self._pipe = pipeline("image-classification", model=model_name)
+        key = api_key or os.getenv("GOOGLE_API_KEY")
+        if not key:
+            raise ValueError(
+                "No API key provided. Set GOOGLE_API_KEY env var "
+                "or pass api_key parameter."
+            )
+        genai.configure(api_key=key)
+        self.model = genai.GenerativeModel("gemini-pro-vision")
 
     def analyze(self, image_path: str) -> Dict[str, Any]:
-        """Analyze an image for authenticity.
+        """Analyze an image for authenticity using Gemini.
 
         Parameters
         ----------
@@ -38,7 +45,23 @@ class ImageDetector:
 
         Returns
         -------
-        Dictionary containing raw pipeline output with labels and scores.
+        Dictionary containing Gemini's assessment of whether the image
+        appears to be AI-generated.
         """
-        result = self._pipe(image_path)
-        return {"raw": result}
+        try:
+            # Load the image
+            image = Image.open(image_path)
+
+            prompt = """Analyze this image and determine if it appears to be AI-generated or a real photograph.
+
+Respond with a JSON object containing:
+- "is_ai_generated": boolean
+- "confidence": float between 0 and 1
+- "reasoning": string explaining your assessment (note any AI artifacts, inconsistencies, or signs of authenticity)
+
+Only return the JSON, no other text."""
+
+            response = self.model.generate_content([prompt, image])
+            return {"raw": response.text, "model": "gemini-pro-vision"}
+        except Exception as e:
+            return {"raw": str(e), "model": "gemini-pro-vision", "error": True}

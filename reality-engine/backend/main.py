@@ -18,12 +18,15 @@ app.add_middleware(
 )
 
 # detectors and scoring
+import os
 from reality_engine.backend.text_detector import TextDetector
 from reality_engine.backend.image_detector import ImageDetector
 from reality_engine.backend.scoring_engine import ScoringEngine
 
-text_detector = TextDetector()
-image_detector = ImageDetector()
+# Initialize detectors with Gemini API key from environment
+api_key = os.getenv("GOOGLE_API_KEY")
+text_detector = TextDetector(api_key=api_key)
+image_detector = ImageDetector(api_key=api_key)
 scoring_engine = ScoringEngine()
 
 
