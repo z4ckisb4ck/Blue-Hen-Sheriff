@@ -3,67 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reality Engine - Content Authenticity Detector</title>
+    <title>Blue Hen Sheriff - AI Image Detector</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <img src="assets/sheriff.png" alt="Sheriff Badge" class="logo">
             <h1>🤠 Blue Hen Sheriff</h1>
-            <p class="subtitle">Detecting Reality, One Frame at a Time</p>
+            <p class="subtitle">AI Image Detector</p>
         </header>
 
         <main>
             <div class="detector-panel">
-                <h2>Content Analysis</h2>
+                <h2>Is This Image AI-Generated?</h2>
                 
                 <div class="upload-section">
-                    <h3>Upload Content</h3>
-                    <form id="uploadForm">
-                        <div class="input-group">
-                            <label for="contentType">Content Type:</label>
-                            <select id="contentType" name="contentType" required>
-                                <option value="video">Video</option>
-                                <option value="audio">Audio</option>
-                                <option value="text">Text</option>
-                            </select>
-                        </div>
+                    <div class="upload-area" id="uploadArea">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Drag and drop an image here</p>
+                        <p class="or">or</p>
+                        <label for="imageInput" class="btn-primary">Select Image</label>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                    </div>
+                </div>
 
-                        <div class="input-group">
-                            <label for="fileInput">Select File:</label>
-                            <input type="file" id="fileInput" name="file" required>
-                        </div>
-
-                        <button type="submit" class="btn-primary">Analyze Content</button>
-                    </form>
+                <div class="preview-section" id="previewSection" style="display: none;">
+                    <img id="previewImage" src="" alt="Preview">
                 </div>
 
                 <div class="results-section" id="resultsSection" style="display: none;">
                     <h3>Analysis Results</h3>
                     <div class="result-card">
-                        <div class="score-display">
-                            <div class="authenticity-score" id="authenticityScore">--</div>
-                            <p>Authenticity Score</p>
-                        </div>
                         <div class="verdict" id="verdict">ANALYZING...</div>
+                        <div class="confidence" id="confidence"></div>
                     </div>
-
-                    <div class="details">
-                        <h4>Detailed Analysis</h4>
-                        <div id="detailedResults"></div>
-                    </div>
+                    <div class="details" id="details"></div>
+                    <button class="btn-secondary" onclick="resetForm()">Analyze Another Image</button>
                 </div>
 
                 <div class="loading-section" id="loadingSection" style="display: none;">
-                    <img src="assets/lasso.gif" alt="Loading..." class="spinner">
-                    <p>Analyzing your content...</p>
+                    <div class="spinner"></div>
+                    <p>Analyzing image...</p>
                 </div>
             </div>
         </main>
 
         <footer>
-            <p>&copy; 2026 Blue Hen Sheriff. Protecting digital integrity.</p>
+            <p>&copy; 2026 Blue Hen Sheriff</p>
         </footer>
     </div>
 

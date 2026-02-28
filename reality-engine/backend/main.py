@@ -3,7 +3,9 @@
 Runs the FastAPI/Flask server and coordinates detection modules.
 """
 
-from fastapi import FastAPI
+import os
+import tempfile
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Reality Engine API", version="1.0.0")
@@ -42,13 +44,28 @@ def analyze_text(payload: dict):
 
 
 @app.post("/analyze/image")
-def analyze_image(payload: dict):
-    """Request body: {"image_path": "path/to/image.jpg"}.
-
-    In a real deployment you'd accept file uploads instead of paths.
+async def analyze_image(file: UploadFile = File(...)):
+    """Accept image file upload and analyze for AI-generation.
+    
+    Returns authenticity score and Gemini's assessment.
     """
-    det = image_detector.analyze(payload.get("image_path", ""))
-    return scoring_engine.calculate_score({"image": det})
+    try:
+        # Save uploaded file to temporary location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
+            contents = await file.read()
+            tmp_file.write(contents)
+            tmp_path = tmp_file.name
+        
+        # Analyze the image
+        det = image_detector.analyze(tmp_path)
+        result = scoring_engine.calculate_score({"image": det})
+        
+        # Clean up temp file
+        os.unlink(tmp_path)
+        
+        return result
+    except Exception as e:
+        return {"error": str(e), "authenticity": None}
 
 
 if __name__ == "__main__":

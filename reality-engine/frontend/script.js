@@ -1,53 +1,157 @@
-// API Configuration
-const API_BASE_URL = "http://localhost:8000";
+const uploadArea = document.getElementById('uploadArea');
+const imageInput = document.getElementById('imageInput');
+const previewSection = document.getElementById('previewSection');
+const previewImage = document.getElementById('previewImage');
+const resultsSection = document.getElementById('resultsSection');
+const loadingSection = document.getElementById('loadingSection');
+const verdictDiv = document.getElementById('verdict');
+const confidenceDiv = document.getElementById('confidence');
+const detailsDiv = document.getElementById('details');
 
-// DOM Elements
-const uploadForm = document.getElementById("uploadForm");
-const fileInput = document.getElementById("fileInput");
-const contentTypeSelect = document.getElementById("contentType");
-const resultsSection = document.getElementById("resultsSection");
-const loadingSection = document.getElementById("loadingSection");
-const authenticityScoreElement = document.getElementById("authenticityScore");
-const verdictElement = document.getElementById("verdict");
-const detailedResultsElement = document.getElementById("detailedResults");
+let selectedFile = null;
 
-// Event Listeners
-uploadForm.addEventListener("submit", handleFormSubmit);
+// Upload area click handler
+uploadArea.addEventListener('click', () => imageInput.click());
 
-async function handleFormSubmit(event) {
-    event.preventDefault();
-
-    const file = fileInput.files[0];
-    const contentType = contentTypeSelect.value;
-
-    if (!file) {
-        alert("Please select a file");
-        return;
+// File input change handler
+imageInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        showPreview();
+        analyzeImage();
     }
+});
 
-    // Show loading state
-    resultsSection.style.display = "none";
-    loadingSection.style.display = "block";
+// Drag and drop handlers
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#4CAF50';
+    uploadArea.style.backgroundColor = '#f0f8f0';
+});
 
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.style.borderColor = '#ddd';
+    uploadArea.style.backgroundColor = '#fafafa';
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#ddd';
+    uploadArea.style.backgroundColor = '#fafafa';
+    
+    if (e.dataTransfer.files.length > 0) {
+        selectedFile = e.dataTransfer.files[0];
+        if (selectedFile.type.startsWith('image/')) {
+            showPreview();
+            analyzeImage();
+        } else {
+            alert('Please drop an image file');
+        }
+    }
+});
+
+function showPreview() {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        previewSection.style.display = 'block';
+    };
+    reader.readAsDataURL(selectedFile);
+}
+
+async function analyzeImage() {
+    // Hide previous results
+    resultsSection.style.display = 'none';
+    uploadArea.style.display = 'none';
+    
+    // Show loading
+    loadingSection.style.display = 'block';
+    
     try {
         const formData = new FormData();
-        formData.append("file", file);
-        formData.append("content_type", contentType);
-
-        // Call backend API
-        const response = await fetch(`${API_BASE_URL}/analyze`, {
-            method: "POST",
-            body: formData,
+        formData.append('file', selectedFile);
+        
+        const response = await fetch('http://localhost:8000/analyze/image', {
+            method: 'POST',
+            body: formData
         });
-
-        if (!response.ok) {
-            throw new Error("Analysis failed");
-        }
-
-        const results = await response.json();
-        displayResults(results);
+        
+        const data = await response.json();
+        
+        // Hide loading
+        loadingSection.style.display = 'none';
+        
+        // Show results
+        displayResults(data);
+        resultsSection.style.display = 'block';
     } catch (error) {
-        console.error("Error:", error);
+        loadingSection.style.display = 'none';
+        verdictDiv.textContent = 'Error analyzing image';
+        verdictDiv.className = 'verdict error';
+        detailsDiv.innerHTML = `<p>${error.message}</p>`;
+        resultsSection.style.display = 'block';
+    }
+}
+
+function displayResults(data) {
+    if (data.error) {
+        verdictDiv.textContent = '⚠️ Analysis Error';
+        verdictDiv.className = 'verdict error';
+        detailsDiv.innerHTML = `<p>${data.error}</p>`;
+        return;
+    }
+    
+    // Parse the raw response from Gemini
+    try {
+        const rawText = data.details?.image?.raw || data.raw || '';
+        
+        // Try to extract JSON from the response
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        const analysisData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+        
+        if (analysisData) {
+            const isAI = analysisData.is_ai_generated;
+            const confidence = (analysisData.confidence * 100).toFixed(1);
+            const reasoning = analysisData.reasoning;
+            
+            // Set verdict
+            if (isAI) {
+                verdictDiv.textContent = '🤖 AI-GENERATED';
+                verdictDiv.className = 'verdict ai-generated';
+            } else {
+                verdictDiv.textContent = '✅ AUTHENTIC';
+                verdictDiv.className = 'verdict authentic';
+            }
+            
+            // Set confidence
+            confidenceDiv.innerHTML = `<strong>Confidence:</strong> ${confidence}%`;
+            
+            // Set reasoning
+            detailsDiv.innerHTML = `
+                <h4>Analysis:</h4>
+                <p>${reasoning}</p>
+            `;
+        } else {
+            // Fallback: just show the raw response
+            detailsDiv.innerHTML = `<p>${rawText}</p>`;
+            verdictDiv.textContent = 'Review Gemini Response';
+            verdictDiv.className = 'verdict pending';
+        }
+    } catch (e) {
+        detailsDiv.innerHTML = `<p>${data.details?.image?.raw || 'Unable to parse response'}</p>`;
+        verdictDiv.textContent = 'Review Analysis';
+        verdictDiv.className = 'verdict pending';
+    }
+}
+
+function resetForm() {
+    selectedFile = null;
+    imageInput.value = '';
+    previewSection.style.display = 'none';
+    resultsSection.style.display = 'none';
+    loadingSection.style.display = 'none';
+    uploadArea.style.display = 'block';
+}
         alert("An error occurred during analysis. Please try again.");
     } finally {
         loadingSection.style.display = "none";
