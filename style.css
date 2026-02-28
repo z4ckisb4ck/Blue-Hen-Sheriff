@@ -1,0 +1,12 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+#wildwest-canvas {
+  background: linear-gradient(to top, #e0cda9 60%, #87ceeb 100%);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
