@@ -12,16 +12,36 @@
 			<p>A system that continuously estimates whether what you’re seeing/hearing is real!</p>
 		</header>
 		<!-- Background music -->
-		<audio id="bg-music" src="/Users/sibaljamshed/Music/Music/Media.localized/Music/Unknown Artist/Unknown Album/bfcmusic-wild-west-never-sleeps-246672.mp3" autoplay loop style="display:none;"></audio>
+		<audio id="bg-music" src="https://cdn.pixabay.com/audio/2022/07/26/audio_124bfa4c7b.mp3" autoplay loop muted style="display:none;"></audio>
 		<main style="position:relative; width:800px; margin:0 auto;">
             <p> Howdy! We are missing... finish later</p>
 			<canvas id="wildwest-canvas" width="800" height="350" style="border:1px solid #888; background: #e0cda9; display: block; margin: 0 auto 20px auto; position:relative; z-index:1;"></canvas>
 			<div id="textbox-container">
 				
 			</div>
-			<button id="clickBtn" style="font-size: 1.4rem; padding: 14px 38px; min-width: 170px; border-radius: 12px; margin-top: 16px;">Tag along!</button>
+			   <button id="clickBtn" style="font-size: 1.4rem; padding: 14px 38px; min-width: 170px; border-radius: 12px; margin-top: 16px;">Tag along!</button>
 			<p id="message"></p>
 		</main>
-		<script src="script.js"></script>
+		   <script src="script.js"></script>
+		   <script>
+		   // Link the Tag along! button to page2.html
+		   document.getElementById('clickBtn').addEventListener('click', function(e) {
+			   window.location.href = 'page2.html';
+		   });
+		   </script>
+		   <script>
+		   // Unmute and play music on first user interaction (required for autoplay with sound)
+		   function enableMusicOnce() {
+			   var audio = document.getElementById('bg-music');
+			   if (audio.muted) {
+				   audio.muted = false;
+				   audio.play();
+			   }
+			   window.removeEventListener('click', enableMusicOnce);
+			   window.removeEventListener('keydown', enableMusicOnce);
+		   }
+		   window.addEventListener('click', enableMusicOnce);
+		   window.addEventListener('keydown', enableMusicOnce);
+		   </script>
 	</body>
 </html>
