@@ -1,25 +1,12 @@
 body {
-	font-family: Arial, sans-serif;
-	text-align: center;
-	margin: 0;
-	padding: 0;
-	background-color: #f4f4f4;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
 }
 
-header {
-	background-color: #333;
-	color: white;
-	padding: 20px;
-}
-
-button {
-	padding: 10px 20px;
-	font-size: 16px;
-	cursor: pointer;
-	margin-top: 20px;
-}
-
-button:hover {
-	background-color: #555;
-	color: white;
+#wildwest-canvas {
+  background: linear-gradient(to top, #e0cda9 60%, #87ceeb 100%);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
