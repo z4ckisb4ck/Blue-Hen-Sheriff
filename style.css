@@ -1,12 +1,102 @@
+/* Global */
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
   margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
+  font-family: Georgia, serif;
 }
 
-#wildwest-canvas {
-  background: linear-gradient(to top, #e0cda9 60%, #87ceeb 100%);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+/* Wild West Background */
+.wildwest {
+  background: linear-gradient(#d6a96f,#8b5a2b);
+  height: 100vh;
+  text-align: center;
+  padding-top: 120px;
+}
+
+/* Cowboy Chase Animation */
+.scene {
+  position: relative;
+}
+
+.cowboy {
+  position: absolute;
+  left: -100px;
+  top: 150px;
+  font-size: 60px;
+  animation: chase 6s linear infinite;
+}
+
+.thief {
+  position: absolute;
+  left: 70%;
+  top: 150px;
+  font-size: 60px;
+}
+
+@keyframes chase {
+  from { left: -100px }
+  to { left: 80% }
+}
+
+/* Page 2 — Saloon Room */
+.saloon-room {
+  background: url("https://images.unsplash.com/photo-1502082553048-f009c37129b9") center/cover;
+  height: 100vh;
+}
+
+/* Computer */
+.computer-container {
+  text-align: center;
+  padding-top: 100px;
+}
+
+.screen {
+  width: 500px;
+  height: 300px;
+  background: black;
+  margin: auto;
+  border: 12px solid #555;
+  color: #00ff00;
+  font-family: monospace;
+  padding: 20px;
+  box-shadow: 0 0 40px #00ff00;
+}
+
+.hacking-text {
+  animation: blink 1s infinite alternate;
+}
+
+@keyframes blink {
+  from {opacity: 1}
+  to {opacity: 0.7}
+}
+
+/* AI Box */
+.ai-box {
+  margin-top: 20px;
+}
+
+.ai-box input {
+  padding: 12px;
+  width: 300px;
+}
+
+/* Newspaper Background */
+.newspaper {
+  background: #f2e8c9;
+  padding: 100px;
+}
+
+/* Verdict Styling */
+.verdict {
+  text-align: center;
+  padding: 40px;
+}
+
+.guilty { color: red }
+.innocent { color: green }
+
+/* Rating Stars */
+.rating span {
+  font-size: 40px;
+  cursor: pointer;
 }
