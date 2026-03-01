@@ -13,11 +13,19 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
+from dotenv import load_dotenv
+import httpx
+import json
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from cryptography.fernet import Fernet
+from pydantic import BaseModel
 import logging
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ============================================================================
 # CONFIGURATION & SETUP
@@ -361,6 +369,112 @@ async def verify_image(hash_value: str):
         "filename": metadata["filename"],
         "status": metadata["status"]
     }
+
+
+# ============================================================================
+# TEXT ANALYSIS (Wild West Judge)
+# ============================================================================
+
+class TextAnalysisRequest(BaseModel):
+    """Request model for text analysis."""
+    prompt: str
+
+
+@app.post("/analyze/text")
+async def analyze_text(request: TextAnalysisRequest):
+    """
+    Analyze text using Gemini API for Wild West Judge verdicts.
+    Uses the official google-genai SDK.
+    Falls back to mock responses if API fails.
+    """
+    import random
+    import json
+    
+    api_key = os.getenv("GEMINI_API_KEY")
+    
+    # Try using real Gemini API
+    if api_key:
+        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro"]
+        
+        for model in models_to_try:
+            try:
+                # Use CORRECT endpoint: /v1/ not /v1beta/
+                url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
+                
+                prompt = f"""You are the FRONTIER_AI, a wild west themed AI judge. Your job is to analyze cases and render verdicts.
+
+IMPORTANT: Your response MUST be valid JSON in this exact format:
+{{
+  "verdict": "GUILTY" or "INNOCENT",
+  "reasoning": "A 2-3 sentence explanation in wild west style (use words like partner, reckon, yonder, mighty, etc.)",
+  "confidence": 1-5
+}}
+
+Case to judge: {request.prompt}"""
+                
+                # Use blocking sync call for this endpoint
+                import requests
+                response = requests.post(
+                    url,
+                    json={
+                        "contents": [
+                            {
+                                "parts": [
+                                    {"text": prompt}
+                                ]
+                            }
+                        ]
+                    },
+                    timeout=30
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "candidates" in data and len(data["candidates"]) > 0:
+                        text_response = data["candidates"][0]["content"]["parts"][0]["text"]
+                        logger.info(f"✓ Real API ({model}): {request.prompt[:50]}...")
+                        return JSONResponse(content={"response": text_response})
+                else:
+                    logger.warning(f"Model {model}: HTTP {response.status_code} - {response.text[:200]}")
+                    
+            except Exception as model_err:
+                logger.warning(f"Model {model} error: {model_err}")
+                continue
+        
+        logger.warning("All Gemini models failed, using mock response")
+    else:
+        logger.info("ℹ️  No GEMINI_API_KEY set, using mock responses")
+    
+    # Use mock responses as fallback
+    verdicts = ["GUILTY", "INNOCENT"]
+    verdict = random.choice(verdicts)
+    
+    if verdict == "GUILTY":
+        reasonings = [
+            "Well now partner, this here varmint done broke the law clear as day. I reckon justice demands we find 'em GUILTY, yessir!",
+            "By the dusty trails of the frontier, I reckon this lawbreaker's guilt is as plain as the nose on a mule's face. GUILTY as charged, partner!",
+            "Mighty suspicious circumstances here, partner. The evidence points yonder to a GUILTY verdict, I do declare!",
+        ]
+    else:
+        reasonings = [
+            "Hold yer horses, partner! This here defendant looks innocent as a newborn calf. I reckon we gotta let 'em ride free!",
+            "Well I'll be hornswoggled! Ain't no evidence worth a hill of beans here. This one's INNOCENT, clear as the prairie sky!",
+            "Now partner, even in these wild frontier lands, we gotta follow the law. This defendant's INNOCENT, and that's my final word!",
+        ]
+    
+    reasoning = random.choice(reasonings)
+    confidence = random.randint(3, 5)
+    
+    mock_response = json.dumps({
+        "verdict": verdict,
+        "reasoning": reasoning,
+        "confidence": confidence
+    })
+    
+    logger.info("📝 Using MOCK response (fallback)")
+    return JSONResponse(content={"response": mock_response})
+
+
 
 
 # ============================================================================
