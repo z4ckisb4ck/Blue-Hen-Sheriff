@@ -660,9 +660,38 @@
     opacity: 0.15;
     pointer-events: none;
   }
+
+  /* ===== AUDIO BUTTON ===== */
+  .audio-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: linear-gradient(180deg, #d4af37, #8b6914);
+    border: 3px solid var(--dark-brown);
+    color: var(--dark-brown);
+    font-family: 'Rye', cursive;
+    font-size: 0.75rem;
+    padding: 10px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 3px 3px 0 var(--dark-brown);
+    transition: all 0.1s;
+    clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .audio-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--dark-brown); }
+  .audio-btn:active { transform: translate(3px,3px); box-shadow: none; }
+  .audio-icon { font-size: 1.1rem; }
 </style>
 </head>
 <body>
+<!-- Background Music (autoplay on first interaction) -->
+<audio id="bgMusic" loop>
+  <source src="western-theme.wav" type="audio/wav">
+</audio>
 
 <!-- ============ PAGE 1: INTRO ============ -->
 <div id="page1" class="page active">
@@ -882,6 +911,10 @@
   <button class="start-btn" onclick="goToPage(2)">⚡ LET'S GET STARTED ⚡</button>
 </div>
 
+<!-- Audio Control Button -->
+<button class="audio-btn" onclick="toggleMusic()">
+  <span class="audio-icon">🔇</span> OFF
+</button>
 
 <!-- ============ PAGE 2: HACKING ROOM ============ -->
 <div id="page2" class="page">
@@ -1179,6 +1212,18 @@
     fraud: ['Slightly Suspicious', 'Probably Fraudulent', 'Clearly Fraudulent', 'Absolutely Fraudulent', 'DEFINITE FRAUD!'],
     legitimate: ['Slightly Authentic', 'Mostly Genuine', 'Pure and Real', 'Salt of the Earth', 'Absolutely Authentic!']
   };
+
+  function toggleMusic() {
+    const music = document.getElementById('bgMusic');
+    const btn = document.querySelector('.audio-btn');
+    if (music.paused) {
+      music.play();
+      btn.innerHTML = '<span class="audio-icon">🔊</span> ON';
+    } else {
+      music.pause();
+      btn.innerHTML = '<span class="audio-icon">🔇</span> OFF';
+    }
+  }
 
   function rateStars(type, val) {
     const container = document.getElementById(type + 'Stars');
