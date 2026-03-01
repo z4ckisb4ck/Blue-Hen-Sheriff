@@ -402,16 +402,18 @@ async def analyze_text(request: TextAnalysisRequest):
                 # Use CORRECT endpoint: /v1/ not /v1beta/
                 url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
                 
-                prompt = f"""You are the FRONTIER_AI, a wild west themed AI judge. Your job is to analyze cases and render verdicts.
+                prompt = f"""You are an AI-generated content detection system with a Wild West themed personality. Analyze the following text to determine if it was created by AI or by a human.
 
 IMPORTANT: Your response MUST be valid JSON in this exact format:
 {{
   "verdict": "GUILTY" or "INNOCENT",
-  "reasoning": "A 2-3 sentence explanation in wild west style (use words like partner, reckon, yonder, mighty, etc.)",
+  "reasoning": "1-2 sentences max. State the key indicator: uniform sentence structure, overly formal tone, perfect grammar, repetitive patterns = AI. OR natural flow, personal voice, minor errors, informal style = human. Wild West language but concise.",
   "confidence": 1-5
 }}
 
-Case to judge: {request.prompt}"""
+Confidence: 1=uncertain, 2=weak evidence, 3=moderate, 4=strong indicators, 5=extremely confident.
+
+Text to analyze: {request.prompt}"""
                 
                 # Use blocking sync call for this endpoint
                 import requests
@@ -452,15 +454,15 @@ Case to judge: {request.prompt}"""
     
     if verdict == "GUILTY":
         reasonings = [
-            "Well now partner, this here varmint done broke the law clear as day. I reckon justice demands we find 'em GUILTY, yessir!",
-            "By the dusty trails of the frontier, I reckon this lawbreaker's guilt is as plain as the nose on a mule's face. GUILTY as charged, partner!",
-            "Mighty suspicious circumstances here, partner. The evidence points yonder to a GUILTY verdict, I do declare!",
+            "This text shows uniform sentence patterns and overly formal vocabulary typical of AI generation. Grammar's too perfect, partner.",
+            "Repetitive phrasing and unnatural formality detected. Lacks the personal voice humans have - this one's machine-made.",
+            "Clear AI patterns: balanced vocabulary, smooth transitions, shallow emotional depth. Silicon fingerprints all over it.",
         ]
     else:
         reasonings = [
-            "Hold yer horses, partner! This here defendant looks innocent as a newborn calf. I reckon we gotta let 'em ride free!",
-            "Well I'll be hornswoggled! Ain't no evidence worth a hill of beans here. This one's INNOCENT, clear as the prairie sky!",
-            "Now partner, even in these wild frontier lands, we gotta follow the law. This defendant's INNOCENT, and that's my final word!",
+            "Natural flow with informal language and personal touches detected. Minor inconsistencies show human authorship.",
+            "Authentic voice with varied rhythms and genuine quirks. This one's human-written, no doubt.",
+            "Personal perspective and emotional depth present. Real human characteristics throughout this text.",
         ]
     
     reasoning = random.choice(reasonings)
@@ -510,16 +512,18 @@ async def analyze_image(file: UploadFile = File(...)):
                 try:
                     url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
                     
-                    prompt = """You are the FRONTIER_AI, a wild west themed AI judge. Your job is to analyze images as evidence and render verdicts.
+                    prompt = """You are an AI-generated image detection system with a Wild West themed personality. Analyze this image to determine if it was created by AI (like DALL-E, Midjourney, Stable Diffusion) or is a real/human-created photograph or artwork.
 
 IMPORTANT: Your response MUST be valid JSON in this exact format:
 {
   "verdict": "GUILTY" or "INNOCENT",
-  "reasoning": "A 2-3 sentence explanation in wild west style (use words like partner, reckon, yonder, mighty, etc.) describing what you see in the image and your judgment",
+  "reasoning": "1-2 sentences max. State key visual indicators: unnatural lighting, distorted hands/faces, overly smooth textures, impossible physics = AI. OR natural grain, consistent lighting, realistic proportions, authentic techniques = real. Wild West language but brief.",
   "confidence": 1-5
 }
 
-Analyze this image as evidence and judge whether it shows guilty or innocent behavior."""
+Confidence: 1=uncertain, 2=weak evidence, 3=moderate, 4=strong indicators, 5=very confident.
+
+Analyze this image for AI generation detection."""
                     
                     import requests
                     response = requests.post(
@@ -568,15 +572,15 @@ Analyze this image as evidence and judge whether it shows guilty or innocent beh
     
     if verdict == "GUILTY":
         reasonings = [
-            "Well now partner, that picture shows some mighty suspicious behavior! Clear as a desert sunrise, I reckon this one's GUILTY!",
-            "By the dusty trails, that image don't lie! I see guilt written all over it like wanted posters on a saloon wall. GUILTY!",
-            "Mighty damning evidence in that photograph, partner. Justice demands a GUILTY verdict, yessir!",
+            "Unnatural texture smoothness and inconsistent lighting detected. Proportions slightly off - typical AI generation patterns.",
+            "Distorted details and impossible perspective angles observed. Color grading too perfect - this one's machine-made.",
+            "Overly smooth textures and subtle inconsistencies in fine details. Clear AI generation indicators present.",
         ]
     else:
         reasonings = [
-            "Hold yer horses! That picture shows nothing but innocent folk going about their business. INNOCENT as a prairie flower!",
-            "Well I'll be hornswoggled! Ain't nothing guilty in that image, partner. Clear INNOCENT verdict from this sheriff!",
-            "Now that's a picture of honest folk right there. No lawbreaking to be seen, this one's INNOCENT!",
+            "Natural camera artifacts and authentic grain structure detected. Realistic lighting physics confirm human capture.",
+            "Genuine artistic technique with consistent perspective. No AI artifacts found - this is real photography.",
+            "Natural proportions and realistic imperfections throughout. Authentic human-created imagery.",
         ]
     
     reasoning = random.choice(reasonings)

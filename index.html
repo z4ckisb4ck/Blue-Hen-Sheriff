@@ -591,6 +591,7 @@
     color: var(--brown);
     font-style: italic;
     min-height: 20px;
+    display: none;
   }
 
   .back-btn {
@@ -1119,7 +1120,7 @@
     </div>
 
     <div class="stars-section stars-rating-area">
-      <div class="stars-label">⚖ RATE THE FRAUD LEVEL ⚖</div>
+      <div class="stars-label">⚖ RATE THE FRAUDULENT LEVEL ⚖</div>
       <div class="stars-container" id="fraudStars">
         <span class="star" data-val="1">🔫</span>
         <span class="star" data-val="2">🔫</span>
@@ -1209,7 +1210,7 @@
 
   // ===== STAR RATING =====
   const starLabels = {
-    fraud: ['Slightly Suspicious', 'Probably Fraudulent', 'Clearly Fraudulent', 'Absolutely Fraudulent', 'DEFINITE FRAUD!'],
+    fraud: ['Slightly Suspicious', 'Probably Fraudulent', 'Clearly Fraudulent', 'Absolutely Fraudulent', 'DEFINITE FRAUDULENT!'],
     legitimate: ['Slightly Authentic', 'Mostly Genuine', 'Pure and Real', 'Salt of the Earth', 'Absolutely Authentic!']
   };
 
@@ -1418,7 +1419,8 @@
   }
 
   function showVerdict(verdict, reasoning, confidence, originalPrompt) {
-    const isFraud = verdict.toUpperCase() === 'FRAUD';
+    // Map backend verdicts to frontend pages: GUILTY=AI/Fraud, INNOCENT=Human/Legitimate
+    const isFraud = verdict.toUpperCase() === 'GUILTY' || verdict.toUpperCase() === 'FRAUD';
     const pageNum = isFraud ? 3 : 4;
 
     // Store the verdict page for the button
@@ -1428,8 +1430,7 @@
     
     // Build answer text with AI's reasoning and confidence level
     const confidencePercent = Math.round((confidence / 5) * 100);
-    const confidenceBars = '█'.repeat(Math.ceil(confidence)) + '░'.repeat(5 - Math.ceil(confidence));
-    const caseText = `ANALYSIS:\n${reasoning}\n\n━━━━━━━━━━━━━━━━━━━━━\nCONFIDENCE LEVEL:\n${Math.ceil(confidence)}/5 - ${confidencePercent}%\n${confidenceBars}`;
+    const caseText = `ANALYSIS:\n${reasoning}\n\n━━━━━━━━━━━━━━━━━━━━━\nCONFIDENCE LEVEL:\n${Math.ceil(confidence)}/5 - ${confidencePercent}%`;
     
     // Populate the verdict page in the background
     answerEl.textContent = '';
