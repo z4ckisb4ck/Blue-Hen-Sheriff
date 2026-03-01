@@ -20,10 +20,11 @@ import base64
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 import logging
+import io
 
 # Load environment variables from .env file
 load_dotenv()
@@ -594,6 +595,66 @@ Analyze this image for AI generation detection."""
     
     logger.info("📝 Using MOCK image response (fallback)")
     return JSONResponse(content={"response": mock_response})
+
+
+# ============================================================================
+# TEXT-TO-SPEECH (ElevenLabs API)
+# ============================================================================
+
+class TextToSpeechRequest(BaseModel):
+    """Request model for text-to-speech."""
+    text: str
+    voice_id: Optional[str] = "OYWwCdDHouzDwiZJWOOu"  # Premium voice
+
+
+@app.post("/text-to-speech")
+async def text_to_speech(request: TextToSpeechRequest):
+    """
+    Convert text to speech using ElevenLabs API.
+    Returns audio stream that can be played directly in browser.
+    """
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    
+    logger.info(f"Text-to-speech request received. API Key present: {bool(api_key)}")
+    
+    if not api_key:
+        raise HTTPException(status_code=500, detail="ElevenLabs API key not configured")
+    
+    try:
+        from elevenlabs.client import ElevenLabs
+        
+        # Initialize ElevenLabs client
+        client = ElevenLabs(api_key=api_key)
+        
+        logger.info(f"Converting text to speech with voice_id: {request.voice_id}")
+        
+        # Convert text to speech using official SDK
+        audio_generator = client.text_to_speech.convert(
+            text=request.text,
+            voice_id=request.voice_id,
+            model_id="eleven_multilingual_v2",
+            output_format="mp3_44100_128"
+        )
+        
+        # Collect all audio chunks
+        audio_bytes = b"".join(audio_generator)
+        
+        logger.info(f"✓ ElevenLabs TTS generated ({len(audio_bytes)} bytes) for text: {request.text[:50]}...")
+        
+        # Return audio as streaming response
+        return StreamingResponse(
+            io.BytesIO(audio_bytes),
+            media_type="audio/mpeg"
+        )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_msg = f"Text-to-speech error: {type(e).__name__}: {str(e)}"
+        logger.error(error_msg)
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 # ============================================================================

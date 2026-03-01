@@ -610,6 +610,24 @@
   .back-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--dark-brown); }
   .back-btn:active { transform: translate(3px,3px); box-shadow: none; }
 
+  .speak-btn {
+    background: linear-gradient(180deg, #8b4513, #654321);
+    border: 3px solid var(--dark-brown);
+    color: var(--sand);
+    font-family: 'Rye', cursive;
+    font-size: 1rem;
+    padding: 12px 32px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 3px 3px 0 var(--dark-brown);
+    transition: all 0.1s;
+    margin-top: 8px;
+    margin-right: 8px;
+  }
+  .speak-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--dark-brown); }
+  .speak-btn:active { transform: translate(3px,3px); box-shadow: none; }
+  .speak-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   /* Watermark wanted poster */
   .wanted-watermark {
     position: absolute;
@@ -691,7 +709,7 @@
 <body>
 <!-- Background Music (autoplay on first interaction) -->
 <audio id="bgMusic" loop>
-  <source src="assets/background-music.mp3" type="audio/mpeg">
+  <source src="assets/music/background-music.mp3" type="audio/mpeg">
 </audio>
 
 <!-- ============ PAGE 1: INTRO ============ -->
@@ -1131,7 +1149,10 @@
       <div class="stars-text" id="fraudStarsText">Confidence level displayed</div>
     </div>
 
-    <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
+    <div style="display: flex; gap: 8px; justify-content: center;">
+      <button class="speak-btn" onclick="speakVerdict('fraud')" id="speakFraudBtn">🔊 HEAR VERDICT</button>
+      <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
+    </div>
   </div>
 </div>
 
@@ -1173,12 +1194,18 @@
       <div class="stars-text" id="legitimateStarsText">Confidence level displayed</div>
     </div>
 
-    <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
+    <div style="display: flex; gap: 8px; justify-content: center;">
+      <button class="speak-btn" onclick="speakVerdict('legitimate')" id="speakLegitimateBtn">🔊 HEAR VERDICT</button>
+      <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
+    </div>
   </div>
 </div>
 
 
 <script>
+  // Initialize audio volume
+  document.getElementById('bgMusic').volume = 0.3;
+
   // ===== PAGE NAVIGATION =====
   function goToPage(num) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1218,6 +1245,7 @@
     const music = document.getElementById('bgMusic');
     const btn = document.querySelector('.audio-btn');
     if (music.paused) {
+      music.volume = 0.3; // Set volume to 30%
       music.play();
       btn.innerHTML = '<span class="audio-icon">🔊</span> ON';
     } else {
@@ -1238,6 +1266,61 @@
 
   // ===== GLOBAL STATE =====
   let isProcessing = false;
+  let currentAudio = null;
+
+  // ===== TEXT-TO-SPEECH =====
+  async function speakVerdict(type) {
+    const btn = document.getElementById(`speak${type.charAt(0).toUpperCase() + type.slice(1)}Btn`);
+    const answerEl = document.getElementById(`${type}Answer`);
+    const text = answerEl.textContent;
+
+    if (!text || text === 'Loading verdict...') {
+      alert('No verdict to speak!');
+      return;
+    }
+
+    // Stop any currently playing audio
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '🔊 SPEAKING...';
+
+    try {
+      const response = await fetch('http://localhost:8000/text-to-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Convert response to blob and create audio element
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      currentAudio = new Audio(audioUrl);
+      
+      // Play the audio
+      await currentAudio.play();
+      
+      // Reset button when done
+      currentAudio.onended = () => {
+        btn.disabled = false;
+        btn.textContent = '🔊 HEAR VERDICT';
+        URL.revokeObjectURL(audioUrl);
+      };
+
+    } catch (error) {
+      console.error('Text-to-speech error:', error);
+      alert('Failed to generate speech. Make sure ELEVENLABS_API_KEY is set in .env file.');
+      btn.disabled = false;
+      btn.textContent = '🔊 HEAR VERDICT';
+    }
+  }
 
   // ===== IMAGE UPLOAD HANDLER =====
   function triggerFileUpload() {
