@@ -21,7 +21,7 @@ class ScoringEngine:
         raw output produced by each detector's ``analyze`` method.  This
         simple implementation averages the top‑score from each detector and
         returns a single ``{'authenticity': float}`` value between 0 (definitely
-        fake) and 1 (definitely real).
+        fake) and 5 (definitely real).
         """
         scores: List[float] = []
         for name, output in detections.items():
@@ -37,4 +37,6 @@ class ScoringEngine:
             avg = sum(scores) / len(scores)
         else:
             avg = 0.0
-        return {"authenticity": avg, "details": detections}
+        # Convert from 0-1 scale to 0-5 scale
+        authenticity_score = avg * 5
+        return {"authenticity": authenticity_score, "details": detections}
