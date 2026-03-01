@@ -357,6 +357,20 @@
   .submit-btn:hover { filter: brightness(1.2); }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .upload-btn {
+    background: linear-gradient(180deg, #8b7355, #6b5844);
+    border: 1px solid #00ff41;
+    color: #00ff41;
+    font-family: 'Rye', cursive;
+    font-size: 1.2rem;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .upload-btn:hover { filter: brightness(1.1); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
+  .upload-btn:active { transform: scale(0.95); }
+
   .thinking-dots::after {
     content: '...';
     animation: dots 1.5s steps(4, end) infinite;
@@ -530,7 +544,8 @@
 
   .star {
     font-size: 2.5rem;
-    cursor: pointer;
+    cursor: not-allowed;
+    pointer-events: none;
     transition: all 0.2s;
     filter: grayscale(1) opacity(0.4);
     line-height: 1;
@@ -1004,6 +1019,14 @@
         placeholder="Describe the case... (e.g. 'Was Jesse James guilty?')"
         onkeydown="if(event.key==='Enter') submitPrompt()"
       />
+      <input
+        type="file"
+        id="fileUpload"
+        accept="image/*"
+        style="display: none;"
+        onchange="handleFileUpload(event)"
+      />
+      <button class="upload-btn" onclick="document.getElementById('fileUpload').click()" title="Upload image">📷</button>
       <button class="submit-btn" id="submitBtn" onclick="submitPrompt()">JUDGE IT</button>
     </div>
   </div>
@@ -1038,13 +1061,13 @@
     <div class="stars-section stars-rating-area">
       <div class="stars-label">⚖ RATE THE GUILT ⚖</div>
       <div class="stars-container" id="guiltyStars">
-        <span class="star" onclick="rateStars('guilty', 1)" data-val="1">🔫</span>
-        <span class="star" onclick="rateStars('guilty', 2)" data-val="2">🔫</span>
-        <span class="star" onclick="rateStars('guilty', 3)" data-val="3">🔫</span>
-        <span class="star" onclick="rateStars('guilty', 4)" data-val="4">🔫</span>
-        <span class="star" onclick="rateStars('guilty', 5)" data-val="5">🔫</span>
+        <span class="star" data-val="1">🔫</span>
+        <span class="star" data-val="2">🔫</span>
+        <span class="star" data-val="3">🔫</span>
+        <span class="star" data-val="4">🔫</span>
+        <span class="star" data-val="5">🔫</span>
       </div>
-      <div class="stars-text" id="guiltyStarsText">Click the revolvers to rate the guilt level</div>
+      <div class="stars-text" id="guiltyStarsText">Confidence level displayed</div>
     </div>
 
     <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
@@ -1080,13 +1103,13 @@
     <div class="stars-section stars-rating-area">
       <div class="stars-label">✦ RATE THE INNOCENCE ✦</div>
       <div class="stars-container" id="innocentStars">
-        <span class="star" onclick="rateStars('innocent', 1)" data-val="1">⭐</span>
-        <span class="star" onclick="rateStars('innocent', 2)" data-val="2">⭐</span>
-        <span class="star" onclick="rateStars('innocent', 3)" data-val="3">⭐</span>
-        <span class="star" onclick="rateStars('innocent', 4)" data-val="4">⭐</span>
-        <span class="star" onclick="rateStars('innocent', 5)" data-val="5">⭐</span>
+        <span class="star" data-val="1">⭐</span>
+        <span class="star" data-val="2">⭐</span>
+        <span class="star" data-val="3">⭐</span>
+        <span class="star" data-val="4">⭐</span>
+        <span class="star" data-val="5">⭐</span>
       </div>
-      <div class="stars-text" id="innocentStarsText">Click the stars to rate the innocence level</div>
+      <div class="stars-text" id="innocentStarsText">Confidence level displayed</div>
     </div>
 
     <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
@@ -1128,6 +1151,80 @@
       s.classList.toggle('active', i < val);
     });
     textEl.textContent = starLabels[type][val - 1];
+  }
+
+  // ===== IMAGE UPLOAD HANDLER =====
+  async function handleFileUpload(event) {
+    if (isProcessing) return;
+    const file = event.target.files[0];
+    if (!file) return;
+
+    isProcessing = true;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'ANALYZING...';
+
+    addMessage('user', `📷 Analyzing image: ${file.name}`);
+    
+    const thinkingId = addMessage('ai', '<span class="thinking-dots">PROCESSING IMAGE</span>', true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch("http://localhost:8000/analyze/image", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const rawText = data.raw || data.response || JSON.stringify(data);
+
+      let parsed;
+      try {
+        const clean = typeof rawText === 'string' ? rawText.replace(/```json|```/g, '').trim() : rawText;
+        parsed = typeof clean === 'string' ? JSON.parse(clean) : clean;
+      } catch(e) {
+        // If parsing fails, use raw data
+        const isGuilty = rawText.toString().toLowerCase().includes('fake') || rawText.toString().toLowerCase().includes('generated');
+        parsed = {
+          verdict: isGuilty ? 'GUILTY' : 'INNOCENT',
+          reasoning: rawText.toString().slice(0, 300),
+          confidence: 3
+        };
+      }
+
+      // Remove thinking message
+      document.getElementById(thinkingId)?.remove();
+
+      const verdictText = `VERDICT: ${parsed.verdict || 'PROCESSING'}`;
+      addMessage('ai', verdictText);
+      addMessage('system', parsed.reasoning || 'The law has spoken!');
+
+      // Navigate to verdict page after a delay
+      setTimeout(() => {
+        showVerdict(
+          parsed.verdict || 'INNOCENT',
+          parsed.reasoning || rawText.toString().slice(0, 500),
+          parsed.confidence || 3,
+          `Image: ${file.name}`
+        );
+      }, 1500);
+
+    } catch(err) {
+      document.getElementById(thinkingId)?.remove();
+      addMessage('system', 'ERROR: Telegraph line down, partner. Try again!');
+      console.error(err);
+    }
+
+    isProcessing = false;
+    btn.disabled = false;
+    btn.textContent = 'JUDGE IT';
+    event.target.value = '';
   }
 
   // ===== AI INTERACTION =====

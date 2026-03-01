@@ -45,10 +45,10 @@ class ImageDetector:
         
         # Load ViT model
         self.vit_processor = ViTImageProcessor.from_pretrained(
-            "ptsrepo/vit-base-patch16-224-in21k-generated-image-classifier"
+            "google/vit-base-patch16-224-in21k"
         )
         self.vit_model = ViTForImageClassification.from_pretrained(
-            "ptsrepo/vit-base-patch16-224-in21k-generated-image-classifier"
+            "google/vit-base-patch16-224-in21k"
         ).to(self.device)
 
     def analyze(self, image_path: str) -> Dict[str, Any]:
