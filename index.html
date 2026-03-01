@@ -371,6 +371,32 @@
   .upload-btn:hover { filter: brightness(1.1); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
   .upload-btn:active { transform: scale(0.95); }
 
+  .verdict-btn {
+    width: 100%;
+    background: linear-gradient(180deg, #d4af37, #b8860b);
+    border: 2px solid #8b6914;
+    color: #1a0a00;
+    font-family: 'Rye', cursive;
+    font-size: 1.1rem;
+    padding: 12px 20px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    border-radius: 4px;
+    margin-top: 10px;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+  }
+  .verdict-btn:hover { 
+    filter: brightness(1.15);
+    box-shadow: 5px 5px 0 rgba(0,0,0,0.4);
+    transform: translate(-2px, -2px);
+  }
+  .verdict-btn:active { 
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+    transform: translate(2px, 2px);
+  }
+
   .thinking-dots::after {
     content: '...';
     animation: dots 1.5s steps(4, end) infinite;
@@ -1016,7 +1042,7 @@
         type="text"
         class="prompt-input"
         id="promptInput"
-        placeholder="Describe the case... (e.g. 'Was Jesse James guilty?')"
+        placeholder="Analyze the case... (e.g. 'Is this text AI-generated?')"
         onkeydown="if(event.key==='Enter') submitPrompt()"
       />
       <input
@@ -1029,13 +1055,14 @@
       <button class="upload-btn" onclick="document.getElementById('fileUpload').click()" title="Upload image">📷</button>
       <button class="submit-btn" id="submitBtn" onclick="submitPrompt()">JUDGE IT</button>
     </div>
+    <button class="verdict-btn" id="verdictBtn" style="display: none;" onclick="goToVerdictPage()">📋 READ VERDICT 📋</button>
   </div>
 </div>
 
 
-<!-- ============ PAGE 3: GUILTY ============ -->
+<!-- ============ PAGE 3: FRAUD ============ -->
 <div id="page3" class="page">
-  <div class="wanted-watermark">GUILTY</div>
+  <div class="wanted-watermark">FRAUD</div>
   <div class="newspaper-inner">
     <div class="paper-masthead">
       <div class="paper-name">The Frontier Gazette</div>
@@ -1047,27 +1074,27 @@
       <span>ONE CENT</span>
     </div>
 
-    <div class="headline">GUILTY AS CHARGED!</div>
-    <div class="subheadline">The Law Has Spoken — Justice Rides at Dawn</div>
+    <div class="headline">FRAUDULENT ACTIVITY DETECTED!</div>
+    <div class="subheadline">The Evidence Shows Signs of Deception and Forgery</div>
 
     <div class="verdict-divider">
-      <div class="verdict-stamp">GUILTY</div>
+      <div class="verdict-stamp">FRAUD</div>
     </div>
 
     <div class="answer-box">
-      <div class="answer-text" id="guiltyAnswer">Loading verdict...</div>
+      <div class="answer-text" id="fraudAnswer">Loading verdict...</div>
     </div>
 
     <div class="stars-section stars-rating-area">
-      <div class="stars-label">⚖ RATE THE GUILT ⚖</div>
-      <div class="stars-container" id="guiltyStars">
+      <div class="stars-label">⚖ RATE THE FRAUD LEVEL ⚖</div>
+      <div class="stars-container" id="fraudStars">
         <span class="star" data-val="1">🔫</span>
         <span class="star" data-val="2">🔫</span>
         <span class="star" data-val="3">🔫</span>
         <span class="star" data-val="4">🔫</span>
         <span class="star" data-val="5">🔫</span>
       </div>
-      <div class="stars-text" id="guiltyStarsText">Confidence level displayed</div>
+      <div class="stars-text" id="fraudStarsText">Confidence level displayed</div>
     </div>
 
     <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
@@ -1075,9 +1102,9 @@
 </div>
 
 
-<!-- ============ PAGE 4: INNOCENT ============ -->
+<!-- ============ PAGE 4: LEGITIMATE ============ -->
 <div id="page4" class="page">
-  <div class="wanted-watermark">INNOCENT</div>
+  <div class="wanted-watermark">LEGITIMATE</div>
   <div class="newspaper-inner">
     <div class="paper-masthead">
       <div class="paper-name">The Frontier Gazette</div>
@@ -1089,27 +1116,27 @@
       <span>ONE CENT</span>
     </div>
 
-    <div class="headline">INNOCENT! SET FREE!</div>
-    <div class="subheadline">The Sheriff Rides On — No Crime Was Found</div>
+    <div class="headline">LEGITIMATE! CLEARED!</div>
+    <div class="subheadline">The Sheriff Confirms — Content is Authentic</div>
 
     <div class="verdict-divider">
-      <div class="verdict-stamp">INNOCENT</div>
+      <div class="verdict-stamp">LEGITIMATE</div>
     </div>
 
     <div class="answer-box">
-      <div class="answer-text" id="innocentAnswer">Loading verdict...</div>
+      <div class="answer-text" id="legitimateAnswer">Loading verdict...</div>
     </div>
 
     <div class="stars-section stars-rating-area">
-      <div class="stars-label">✦ RATE THE INNOCENCE ✦</div>
-      <div class="stars-container" id="innocentStars">
+      <div class="stars-label">✦ RATE THE LEGITIMACY ✦</div>
+      <div class="stars-container" id="legitimateStars">
         <span class="star" data-val="1">⭐</span>
         <span class="star" data-val="2">⭐</span>
         <span class="star" data-val="3">⭐</span>
         <span class="star" data-val="4">⭐</span>
         <span class="star" data-val="5">⭐</span>
       </div>
-      <div class="stars-text" id="innocentStarsText">Confidence level displayed</div>
+      <div class="stars-text" id="legitimateStarsText">Confidence level displayed</div>
     </div>
 
     <button class="back-btn" onclick="goToPage(2)">⬅ NEW CASE</button>
@@ -1125,7 +1152,17 @@
     window.scrollTo(0, 0);
     if (num === 2) {
       document.getElementById('promptInput').value = '';
+      document.getElementById('verdictBtn').style.display = 'none';
       resetChat();
+    }
+  }
+
+  // ===== VERDICT PAGE TRACKING =====
+  let currentVerdictPage = null;
+
+  function goToVerdictPage() {
+    if (currentVerdictPage) {
+      goToPage(currentVerdictPage);
     }
   }
 
@@ -1139,8 +1176,8 @@
 
   // ===== STAR RATING =====
   const starLabels = {
-    guilty: ['Suspicious...', 'Probably Guilty', 'Clearly Guilty', 'Absolutely Guilty', 'HANG \'EM HIGH!'],
-    innocent: ['Slightly Innocent', 'Mostly Clean', 'Pure as Gold', 'Salt of the Earth', 'Pure as Prairie Wind!']
+    fraud: ['Slightly Suspicious', 'Probably Fraudulent', 'Clearly Fraudulent', 'Absolutely Fraudulent', 'DEFINITE FRAUD!'],
+    legitimate: ['Slightly Authentic', 'Mostly Genuine', 'Pure and Real', 'Salt of the Earth', 'Absolutely Authentic!']
   };
 
   function rateStars(type, val) {
@@ -1190,9 +1227,9 @@
         parsed = typeof clean === 'string' ? JSON.parse(clean) : clean;
       } catch(e) {
         // If parsing fails, use raw data
-        const isGuilty = rawText.toString().toLowerCase().includes('fake') || rawText.toString().toLowerCase().includes('generated');
+        const isFraud = rawText.toString().toLowerCase().includes('fake') || rawText.toString().toLowerCase().includes('generated');
         parsed = {
-          verdict: isGuilty ? 'GUILTY' : 'INNOCENT',
+          verdict: isFraud ? 'FRAUD' : 'LEGITIMATE',
           reasoning: rawText.toString().slice(0, 300),
           confidence: 3
         };
@@ -1268,9 +1305,9 @@
         parsed = JSON.parse(clean);
       } catch(e) {
         // Try to extract verdict from text
-        const isGuilty = rawText.toLowerCase().includes('guilty') && !rawText.toLowerCase().includes('not guilty') && !rawText.toLowerCase().includes('innocent');
+        const isFraud = rawText.toLowerCase().includes('fraud') || rawText.toLowerCase().includes('fake') || rawText.toLowerCase().includes('generated');
         parsed = {
-          verdict: isGuilty ? 'GUILTY' : 'INNOCENT',
+          verdict: isFraud ? 'FRAUD' : 'LEGITIMATE',
           reasoning: rawText.slice(0, 300),
           confidence: 3
         };
@@ -1311,18 +1348,22 @@
   }
 
   function showVerdict(verdict, reasoning, confidence, originalPrompt) {
-    const isGuilty = verdict.toUpperCase() === 'GUILTY';
-    const pageNum = isGuilty ? 3 : 4;
+    const isFraud = verdict.toUpperCase() === 'FRAUD';
+    const pageNum = isFraud ? 3 : 4;
 
-    const answerEl = document.getElementById(isGuilty ? 'guiltyAnswer' : 'innocentAnswer');
+    // Store the verdict page for the button
+    currentVerdictPage = pageNum;
+
+    const answerEl = document.getElementById(isFraud ? 'fraudAnswer' : 'legitimateAnswer');
     
-    // Build answer text
-    const caseText = `CASE: "${originalPrompt}"\n\n${reasoning}`;
+    // Build answer text - show only the reasoning for the verdict
+    const verdictLabel = isFraud ? 'FRAUD' : 'LEGITIMATE';
+    const caseText = `VERDICT: ${verdictLabel}\n\nREASONING:\n${reasoning}`;
+    
+    // Populate the verdict page in the background
     answerEl.textContent = '';
     
-    goToPage(pageNum);
-    
-    // Typewriter effect
+    // Typewriter effect on verdict page
     let i = 0;
     const chars = caseText;
     function typeChar() {
@@ -1332,11 +1373,18 @@
         setTimeout(typeChar, 18);
       }
     }
+    
+    // Start typewriter and show button after a short delay
     setTimeout(typeChar, 300);
 
-    // Auto-set stars based on confidence
+    // Show the verdict button on page 2
+    setTimeout(() => {
+      document.getElementById('verdictBtn').style.display = 'block';
+    }, 500);
+
+    // Auto-set stars based on confidence (on the verdict page)
     if (confidence) {
-      setTimeout(() => rateStars(isGuilty ? 'guilty' : 'innocent', Math.min(5, Math.max(1, confidence))), 1000);
+      setTimeout(() => rateStars(isFraud ? 'fraud' : 'legitimate', Math.min(5, Math.max(1, confidence))), 1000);
     }
   }
 </script>
