@@ -1052,7 +1052,7 @@
         style="display: none;"
         onchange="handleFileUpload(event)"
       />
-      <button class="upload-btn" onclick="document.getElementById('fileUpload').click()" title="Upload image">📷</button>
+      <button class="upload-btn" onclick="triggerFileUpload()" title="Upload image">📷</button>
       <button class="submit-btn" id="submitBtn" onclick="submitPrompt()">JUDGE IT</button>
     </div>
     <button class="verdict-btn" id="verdictBtn" style="display: none;" onclick="goToVerdictPage()">📋 READ VERDICT 📋</button>
@@ -1190,11 +1190,39 @@
     textEl.textContent = starLabels[type][val - 1];
   }
 
+  // ===== GLOBAL STATE =====
+  let isProcessing = false;
+
   // ===== IMAGE UPLOAD HANDLER =====
+  function triggerFileUpload() {
+    try {
+      console.log("triggerFileUpload called");
+      const fileInput = document.getElementById('fileUpload');
+      console.log("fileInput element:", fileInput);
+      if (fileInput) {
+        console.log("Clicking file input...");
+        fileInput.click();
+        console.log("File input click triggered");
+      } else {
+        console.error("File input element not found! ID search failed.");
+      }
+    } catch (err) {
+      console.error("Error in triggerFileUpload:", err);
+    }
+  }
+
   async function handleFileUpload(event) {
-    if (isProcessing) return;
+    console.log("handleFileUpload called with event:", event);
+    if (isProcessing) {
+      console.log("Already processing, returning early");
+      return;
+    }
     const file = event.target.files[0];
-    if (!file) return;
+    console.log("File selected:", file);
+    if (!file) {
+      console.log("No file found");
+      return;
+    }
 
     isProcessing = true;
     const btn = document.getElementById('submitBtn');
@@ -1263,9 +1291,6 @@
     btn.textContent = 'JUDGE IT';
     event.target.value = '';
   }
-
-  // ===== AI INTERACTION =====
-  let isProcessing = false;
 
   async function submitPrompt() {
     if (isProcessing) return;
@@ -1356,9 +1381,10 @@
 
     const answerEl = document.getElementById(isFraud ? 'fraudAnswer' : 'legitimateAnswer');
     
-    // Build answer text - show only the reasoning for the verdict
-    const verdictLabel = isFraud ? 'FRAUD' : 'LEGITIMATE';
-    const caseText = `VERDICT: ${verdictLabel}\n\nREASONING:\n${reasoning}`;
+    // Build answer text with AI's reasoning and confidence level
+    const confidencePercent = Math.round((confidence / 5) * 100);
+    const confidenceBars = '█'.repeat(Math.ceil(confidence)) + '░'.repeat(5 - Math.ceil(confidence));
+    const caseText = `ANALYSIS:\n${reasoning}\n\n━━━━━━━━━━━━━━━━━━━━━\nCONFIDENCE LEVEL:\n${Math.ceil(confidence)}/5 - ${confidencePercent}%\n${confidenceBars}`;
     
     // Populate the verdict page in the background
     answerEl.textContent = '';
