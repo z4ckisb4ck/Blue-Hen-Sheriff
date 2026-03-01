@@ -16,6 +16,7 @@ from typing import Dict, Optional
 from dotenv import load_dotenv
 import httpx
 import json
+import base64
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -475,6 +476,120 @@ Case to judge: {request.prompt}"""
     return JSONResponse(content={"response": mock_response})
 
 
+@app.post("/analyze/image")
+async def analyze_image(file: UploadFile = File(...)):
+    """
+    Analyze an image using Gemini's vision capabilities for Wild West Judge verdicts.
+    Falls back to mock responses if API fails.
+    """
+    import random
+    
+    api_key = os.getenv("GEMINI_API_KEY")
+    
+    # Try using real Gemini Vision API
+    if api_key:
+        try:
+            # Read and encode the image
+            image_bytes = await file.read()
+            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            
+            # Determine MIME type from filename
+            mime_type = "image/jpeg"
+            if file.filename:
+                if file.filename.lower().endswith('.png'):
+                    mime_type = "image/png"
+                elif file.filename.lower().endswith('.webp'):
+                    mime_type = "image/webp"
+                elif file.filename.lower().endswith('.gif'):
+                    mime_type = "image/gif"
+            
+            # Try Gemini vision models
+            vision_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro"]
+            
+            for model in vision_models:
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
+                    
+                    prompt = """You are the FRONTIER_AI, a wild west themed AI judge. Your job is to analyze images as evidence and render verdicts.
+
+IMPORTANT: Your response MUST be valid JSON in this exact format:
+{
+  "verdict": "GUILTY" or "INNOCENT",
+  "reasoning": "A 2-3 sentence explanation in wild west style (use words like partner, reckon, yonder, mighty, etc.) describing what you see in the image and your judgment",
+  "confidence": 1-5
+}
+
+Analyze this image as evidence and judge whether it shows guilty or innocent behavior."""
+                    
+                    import requests
+                    response = requests.post(
+                        url,
+                        json={
+                            "contents": [
+                                {
+                                    "parts": [
+                                        {"text": prompt},
+                                        {
+                                            "inline_data": {
+                                                "mime_type": mime_type,
+                                                "data": image_base64
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if "candidates" in data and len(data["candidates"]) > 0:
+                            text_response = data["candidates"][0]["content"]["parts"][0]["text"]
+                            logger.info(f"✓ Real Vision API ({model}): Image analyzed")
+                            return JSONResponse(content={"response": text_response})
+                    else:
+                        logger.warning(f"Vision Model {model}: HTTP {response.status_code} - {response.text[:200]}")
+                        
+                except Exception as model_err:
+                    logger.warning(f"Vision Model {model} error: {model_err}")
+                    continue
+            
+            logger.warning("All Gemini vision models failed, using mock response")
+            
+        except Exception as e:
+            logger.error(f"Image processing error: {e}")
+    else:
+        logger.info("ℹ️  No GEMINI_API_KEY set, using mock image responses")
+    
+    # Use mock responses as fallback
+    verdicts = ["GUILTY", "INNOCENT"]
+    verdict = random.choice(verdicts)
+    
+    if verdict == "GUILTY":
+        reasonings = [
+            "Well now partner, that picture shows some mighty suspicious behavior! Clear as a desert sunrise, I reckon this one's GUILTY!",
+            "By the dusty trails, that image don't lie! I see guilt written all over it like wanted posters on a saloon wall. GUILTY!",
+            "Mighty damning evidence in that photograph, partner. Justice demands a GUILTY verdict, yessir!",
+        ]
+    else:
+        reasonings = [
+            "Hold yer horses! That picture shows nothing but innocent folk going about their business. INNOCENT as a prairie flower!",
+            "Well I'll be hornswoggled! Ain't nothing guilty in that image, partner. Clear INNOCENT verdict from this sheriff!",
+            "Now that's a picture of honest folk right there. No lawbreaking to be seen, this one's INNOCENT!",
+        ]
+    
+    reasoning = random.choice(reasonings)
+    confidence = random.randint(3, 5)
+    
+    mock_response = json.dumps({
+        "verdict": verdict,
+        "reasoning": reasoning,
+        "confidence": confidence
+    })
+    
+    logger.info("📝 Using MOCK image response (fallback)")
+    return JSONResponse(content={"response": mock_response})
 
 
 # ============================================================================
